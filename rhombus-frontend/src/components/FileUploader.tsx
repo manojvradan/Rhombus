@@ -1,5 +1,6 @@
 import React, { useState, type ChangeEvent } from 'react';
 import axios from 'axios';
+import apiClient from '../api/client';
 
 // 1. Define the shape of the data we expect from the backend
 export interface ProcessedRow {
@@ -44,14 +45,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onDataLoaded }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post<UploadResponse>(
-        'http://localhost:8000/api/upload/', 
-        formData, 
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+      const response = await apiClient.post<UploadResponse>(
+        '/api/upload/', 
+        formData
       );
 
       onDataLoaded(response.data.data, response.data.file_id);

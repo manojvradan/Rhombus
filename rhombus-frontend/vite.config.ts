@@ -9,6 +9,13 @@ export default defineConfig({
     tailwindcss(),
     ],
   server: {
+    proxy: {
+    '/api':{
+      target: 'http://127.0.0:8000',
+      changeOrigin: true,
+      secure: false,
+    }
+  },
     // Optional: This makes the frontend run on port 5173
     port: 5173,
   }

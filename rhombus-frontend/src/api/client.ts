@@ -2,14 +2,11 @@
 import axios from 'axios';
 
 const baseURL = import.meta.env.PROD 
-  ? ''  // In production, use the current domain (relative path)
-  : 'http://localhost:8000'; // In local dev, use localhost
+  ? ''  // Production: uses relative path (handled by vercel.json)
+  : 'http://localhost:8000'; // Local: points to Django directly
 
 const apiClient = axios.create({
   baseURL: baseURL, // TEMP! Change after deployment
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // TODO: Add interceptors for debugging or token handling later
