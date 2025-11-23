@@ -31,7 +31,7 @@ class FileUploadView(APIView):
             elif filename.endswith(('.xls', '.xlsx')):
                 df = pd.read_excel(document.file)
             else:
-                return Response({"error": "Unsupported file type"}, 
+                return Response({"error": "Unsupported file type"},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             # Replace NaN with None (null) for valid JSON
