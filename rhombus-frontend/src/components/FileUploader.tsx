@@ -1,5 +1,4 @@
 import React, { useState, type ChangeEvent } from 'react';
-import axios from 'axios';
 import apiClient from '../api/client';
 
 // 1. Define the shape of the data we expect from the backend
