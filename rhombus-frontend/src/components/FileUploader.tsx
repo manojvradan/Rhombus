@@ -1,17 +1,17 @@
+// src/components/FileUploader.tsx
 import React, { useState, type ChangeEvent } from 'react';
 import apiClient from '../api/client';
 
-// 1. Define the shape of the data we expect from the backend
 export interface ProcessedRow {
   [key: string]: any;
 }
 
-// 2. Define the props this component accepts
+// 1. UPDATE THE PROPS INTERFACE
+// We added 'filename: string' to the callback definition here
 interface FileUploaderProps {
-  onDataLoaded: (data: ProcessedRow[], fileId: number) => void;
+  onDataLoaded: (data: ProcessedRow[], fileId: number, filename: string) => void;
 }
 
-// 3. Define the expected API Response structure
 interface UploadResponse {
   message: string;
   file_id: number;
@@ -24,7 +24,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onDataLoaded }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  // Handle file selection event
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
@@ -32,7 +31,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onDataLoaded }) => {
     }
   };
 
-  // Handle API Upload
   const handleUpload = async () => {
     if (!file) {
       setError('Please select a file first.');
@@ -49,7 +47,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onDataLoaded }) => {
         formData
       );
 
-      onDataLoaded(response.data.data, response.data.file_id);
+      // 2. PASS THE FILENAME HERE
+      // We use 'file.name' from the state since we already have it locally
+      onDataLoaded(response.data.data, response.data.file_id, file.name);
       
     } catch (err: any) {
       console.error(err);

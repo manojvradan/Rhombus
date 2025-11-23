@@ -1,47 +1,32 @@
 // src/pages/Dashboard.tsx
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import FileUploader, { type ProcessedRow } from '../components/FileUploader';
 
 const Dashboard: React.FC = () => {
-  const [tableData, setTableData] = useState<ProcessedRow[]>([]);
-  const [currentFileId, setCurrentFileId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
-  // This callback receives data from the FileUploader child
-  const handleDataLoaded = (data: ProcessedRow[], fileId: number) => {
-    console.log('Data received from backend:', data);
-    setTableData(data);
-    setCurrentFileId(fileId);
+  const handleDataLoaded = (data: ProcessedRow[], fileId: number, filename: string) => {
+    // Navigate to the editor page and pass the data in 'state'
+    navigate('/editor', { 
+      state: { 
+        fileId, 
+        initialData: data,
+        filename
+      } 
+    });
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <header className="max-w-5xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Rhombus AI Regex Tool</h1>
-        <p className="text-slate-600">Upload a CSV, describe a pattern, and replace it.</p>
-      </header>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold text-slate-800 mb-2">Rhombus AI</h1>
+        <p className="text-slate-600">Upload your dataset to begin pattern matching</p>
+      </div>
 
-      <main className="max-w-5xl mx-auto space-y-6">
-        {/* 1. File Upload Section */}
-        <section className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-          <h2 className="text-xl font-semibold mb-4">1. Upload Data</h2>
-          <FileUploader onDataLoaded={handleDataLoaded} />
-        </section>
-
-        {/* 2. Data Preview Section (Visible only after upload) */}
-        {tableData.length > 0 && (
-          <section className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4">
-              Previewing File ID: {currentFileId}
-            </h2>
-            
-            {/* Quick debugging view of the raw data */}
-            <div className="overflow-x-auto bg-slate-900 text-green-400 p-4 rounded font-mono text-sm max-h-96">
-              <pre>{JSON.stringify(tableData.slice(0, 5), null, 2)}</pre>
-              {tableData.length > 5 && <p className="mt-2 text-slate-500">... {tableData.length - 5} more rows</p>}
-            </div>
-          </section>
-        )}
-      </main>
+      <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+        <FileUploader onDataLoaded={handleDataLoaded} />
+      </div>
     </div>
   );
 };
