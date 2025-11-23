@@ -162,7 +162,19 @@ AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 
 # Tell Django to use S3 for FileField storage
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            # This ensures files are public-read so your frontend can download
+            # If you want them private, set 'ACL': 'private'
+            # 'ACL': 'public-read',
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # 3. MEDIA SETTINGS (Fallback)
 # Even with S3, it's good practice to define these
