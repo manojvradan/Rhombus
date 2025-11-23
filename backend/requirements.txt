@@ -9,4 +9,4 @@ openpyxl
 gunicorn
 dj_database_url
 psycopg2-binary
-dotenv-python
+python-dotenv
