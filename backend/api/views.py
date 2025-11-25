@@ -304,3 +304,90 @@ class ApplyFilterView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
+
+
+class GenerateMathView(APIView):
+    def post(self, request):
+        prompt = request.data.get('prompt')
+        data_context = request.data.get('data_context')
+
+        if not prompt:
+            return Response(
+                {"error": "Prompt is required"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Call the new LLM method
+        expression = LLMService.generate_math_operation(prompt, data_context)
+
+        return Response({"expression": expression}, status=status.HTTP_200_OK)
+
+
+class ApplyMathView(APIView):
+    def post(self, request):
+        file_id = request.data.get('file_id')
+        expression = request.data.get('expression')
+
+        if not file_id or not expression:
+            return Response(
+                {"error": "Missing file_id or expression"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            old_doc = get_object_or_404(UploadedDocument, id=file_id)
+            old_doc.file.open()
+
+            # Load Data
+            filename = old_doc.file.name.lower()
+            if filename.endswith('.csv'):
+                df = pd.read_csv(old_doc.file)
+            elif filename.endswith(('.xls', '.xlsx')):
+                df = pd.read_excel(old_doc.file, engine='openpyxl')
+            else:
+                return Response(
+                    {"error": "Unsupported file"},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # --- APPLY MATH TRANSFORMATION ---
+            try:
+                # df.eval() is efficient and handles the column assignment
+                # automatically
+                # e.g., expression is "`Total` = `Price` * `Qty`"
+                # inplace=False returns the modified dataframe
+                df = df.eval(expression, inplace=False)
+            except Exception as e:
+                return Response(
+                    {"error": f"Math Operation Failed: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # --- SAVE AS NEW VERSION ---
+            buffer = BytesIO()
+            new_name = f"v_math_{old_doc.file.name.split('/')[-1]}"
+
+            if filename.endswith('.csv'):
+                df.to_csv(buffer, index=False)
+            else:
+                df.to_excel(buffer, index=False)
+
+            new_doc = UploadedDocument.objects.create(
+                file=ContentFile(buffer.getvalue(), new_name)
+            )
+
+            # Prepare Preview
+            df = df.replace({'nan': None, 'NaN': None})
+            df = df.where(pd.notnull(df), None)
+
+            return Response({
+                "message": "Math operation applied",
+                "data": df.head(50).to_dict(orient='records'),
+                "new_file_id": new_doc.id
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

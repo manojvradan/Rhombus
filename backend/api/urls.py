@@ -6,6 +6,8 @@ from .views import (
     DownloadFileView,
     GenerateFilterView,
     ApplyFilterView,
+    GenerateMathView,
+    ApplyMathView,
     )
 
 urlpatterns = [
@@ -20,4 +22,6 @@ urlpatterns = [
          ),
     path('generate-filter/', GenerateFilterView.as_view()),
     path('apply-filter/', ApplyFilterView.as_view()),
+    path('generate-math/', GenerateMathView.as_view(), name='generate-math'),
+    path('apply-math/', ApplyMathView.as_view(), name='apply-math'),
 ]

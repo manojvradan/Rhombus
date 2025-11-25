@@ -109,7 +109,7 @@ class LLMService:
                 return "Units_Sold > 5000"  # Mock for testing
 
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4-turbo",
                 messages=[
                     {"role": "system", "content": system_instruction},
                     {"role": "user", "content": natural_language_prompt}
@@ -119,4 +119,62 @@ class LLMService:
             return response.choices[0].message.content
         except Exception as e:
             print(f"Filter Error: {e}")
+            return ""
+
+    @staticmethod
+    def generate_math_operation(
+        natural_language_prompt: str,
+        data_context: list = None,
+            ) -> str:
+
+        context_str = ""
+        cols_with_spaces = []
+
+        if data_context:
+            headers = list(data_context[0].keys())
+            # Dynamic list of columns requiring backticks
+            cols_with_spaces = [h for h in headers if " " in h]
+
+            context_str = (
+                f"Available Columns: {headers}\n"
+                f"Sample Row: {str(data_context[0])}"
+                )
+
+        system_instruction = (
+            "You are a Pandas Dataframe Expert. Convert the user's natural "
+            "language "
+            "math request into a Python Pandas .eval() assignment string. "
+            "Return ONLY the assignment string. No code blocks or markdown.\n"
+            "CRITICAL SYNTAX RULES:\n"
+            "1. If a column name contains spaces, it MUST be wrapped in "
+            "backticks"
+            "(e.g. `Unit Price`).\n"
+            f"2. The following columns HAVE spaces and MUST be backticked: {cols_with_spaces}\n"
+            "3. The format must be: NewColumnName = Expression\n"
+            "Example: 'Calculate Profit as Revenue minus Cost'\n"
+            "Output: 'Profit = Revenue - Cost'\n"
+            "Example: 'Calculate Total as Price times Quantity'\n"
+            "Output: 'Total = `Unit Price` * `Quantity Sold`'\n"
+            f"\n\nContext:\n{context_str}"
+        )
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": natural_language_prompt}
+                ],
+                temperature=0.0,
+            )
+
+            content = response.choices[0].message.content.strip()
+
+            if content.startswith("```"):
+                content = content.replace("```python", "").replace("```", "")
+
+            return content.strip()
+
+        except Exception as e:
+            print(f"Math Gen Error: {e}")
             return ""

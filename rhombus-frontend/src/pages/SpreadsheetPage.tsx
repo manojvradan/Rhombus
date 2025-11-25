@@ -36,7 +36,7 @@ const SpreadsheetPage: React.FC = () => {
   const [prompt, setPrompt] = useState('');
 
   // 3. Mode Switching (The "Two Transformations" Requirement)
-  const [mode, setMode] = useState<'regex' | 'filter'>('regex');
+  const [mode, setMode] = useState<'regex' | 'filter' | 'math'>('regex');
 
   // 4. Regex Mode State
   const [replacement, setReplacement] = useState('');
@@ -46,6 +46,8 @@ const SpreadsheetPage: React.FC = () => {
   // 5. Filter Mode State
   const [generatedFilter, setGeneratedFilter] = useState<string | null>(null);
 
+  // 6. Math Mode State (NEW)
+  const [generatedMath, setGeneratedMath] = useState<string | null>(null);
   if (!initialData) return <div className="p-8">No data loaded. <button onClick={() => navigate('/')} className="text-blue-500 underline">Go Home</button></div>;
 
   // --- UNDO / REDO HANDLERS ---
@@ -183,6 +185,56 @@ const SpreadsheetPage: React.FC = () => {
     }
   };
 
+  // --- MATH HANDLERS (NEW) ---
+  const handleGenerateMath = async () => {
+    if (!prompt.trim()) return;
+    setMessages(prev => [...prev, { role: 'user', text: prompt }]);
+    setIsAiLoading(true);
+    setGeneratedMath(null);
+
+    const dataContext = tableData.slice(0, 3);
+
+    try {
+        const response = await apiClient.post('/api/generate-math/', { 
+            prompt: prompt,
+            data_context: dataContext
+        });
+
+        const expression = response.data.expression;
+        setGeneratedMath(expression);
+
+        setMessages(prev => [...prev, { 
+            role: 'ai', 
+            text: `I created this formula:\n\`${expression}\`\nClick Apply to create the column.` 
+        }]);
+        setPrompt('');
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'ai', text: "Could not understand math request." }]);
+    } finally {
+        setIsAiLoading(false);
+    }
+  };
+
+  const handleApplyMath = async () => {
+    if (!generatedMath || !currentFileId) return;
+    setIsAiLoading(true);
+
+    try {
+        const response = await apiClient.post('/api/apply-math/', {
+            file_id: currentFileId,
+            expression: generatedMath
+        });
+
+        pushNewHistoryStep(response.data.new_file_id, response.data.data, "New column created successfully.");
+        setGeneratedMath(null);
+
+    } catch (error) {
+        setMessages(prev => [...prev, { role: 'ai', text: "Math operation failed." }]);
+    } finally {
+        setIsAiLoading(false);
+    }
+  };
+
   // --- DOWNLOAD HANDLER ---
   const handleDownload = async () => {
     if (!currentFileId) return;
@@ -286,6 +338,12 @@ const SpreadsheetPage: React.FC = () => {
                     >
                         Row Filter
                     </button>
+                    <button 
+                        onClick={() => { setMode('math'); setGeneratedRegex(null); setGeneratedFilter(null); }}
+                        className={`text-xs font-bold px-2 py-1 rounded transition-colors ${mode === 'math' ? 'bg-orange-100 text-orange-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                    >
+                        Math Columns
+                    </button>
                 </div>
 
                 {/* --- MODE A: REGEX REPLACE --- */}
@@ -378,6 +436,44 @@ const SpreadsheetPage: React.FC = () => {
                                     className="w-full mt-2 bg-purple-600 text-white text-sm px-4 py-2 rounded hover:bg-purple-700 font-medium disabled:opacity-50"
                                 >
                                     {isAiLoading ? 'Generating Query...' : 'Generate Filter Query'}
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* --- MODE C: MATH COLUMNS (NEW) --- */}
+                {mode === 'math' && (
+                    <>
+                        {generatedMath ? (
+                            <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="text-xs font-mono bg-orange-50 p-2 border border-orange-200 rounded text-orange-800 break-all">
+                                    Formula: {generatedMath}
+                                </div>
+                                <button onClick={handleApplyMath} className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 rounded">
+                                    Create Column
+                                </button>
+                                <button onClick={() => setGeneratedMath(null)} className="w-full text-slate-500 text-xs hover:text-slate-700">
+                                    Cancel
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="animate-in fade-in">
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Describe New Column</label>
+                                <textarea 
+                                    className="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none resize-none"
+                                    rows={3}
+                                    placeholder="e.g. Create a Total column by multiplying Price and Quantity..."
+                                    value={prompt}
+                                    onChange={(e) => setPrompt(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerateMath()}
+                                />
+                                <button 
+                                    onClick={handleGenerateMath}
+                                    disabled={isAiLoading || !prompt.trim()}
+                                    className="w-full mt-2 bg-orange-500 text-white text-sm px-4 py-2 rounded hover:bg-orange-600 font-medium disabled:opacity-50"
+                                >
+                                    {isAiLoading ? 'Generating Formula...' : 'Generate Formula'}
                                 </button>
                             </div>
                         )}
