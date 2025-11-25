@@ -48,7 +48,7 @@ class FileUploadView(APIView):
             # 5. LIMIT PREVIEW SIZE (Crucial for performance)
             # Only send the first 200 rows to the frontend for the preview
             # The full file is safely stored in S3 for later processing
-            preview_df = df.head(50000)
+            preview_df = df.head(200)
 
             # Convert to list of dictionaries
             data_preview = preview_df.to_dict(orient='records')
