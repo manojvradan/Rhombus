@@ -27,15 +27,27 @@ class LLMService:
         system_instruction = (
             "You are a Data Cleaning Assistant. Translate natural language "
             "into a Regex Pattern. "
-            "You must ALSO determine which column the user refers to,"
+            "You must ALSO determine which column the user refers to, "
             "based on the provided headers. "
-            "Return a valid JSON object with strictly two keys:"
-            "'regex' and 'column'. "
-            " - 'regex': The Python regex string (e.g. '\\d+'). "
-            " - 'column': The exact column name from the provided headers"
-            "(string), or null if strictly not specified. "
-            "Do NOT return markdown formatting or explanations."
-            "Just the JSON string."
+            "Return a valid JSON object with strictly two keys: "
+            "'regex' and 'column'.\n"
+            "RULES:\n"
+            "1. 'column': The exact column name from headers or null.\n"
+            "2. IF the user wants to replace the WHOLE VALUE based on a "
+            "condition "
+            "(e.g., 'replace values starting with N'), your regex MUST "
+            "match the "
+            "entire string. Example: Use '^N.*' instead of just '^N'.\n"
+            "3. IF the user wants to replace just a substring (e.g. "
+            "'remove the letter N'), "
+            "match just that substring.\n"
+            "4. FOR NUMERIC MATCHING (e.g. 'values greater than 5'): "
+            "Ensure the regex matches "
+            "the specific number token and NOT digits inside a decimal part (e.g. do not "
+            "match '5' inside '0.25'). Use word boundaries (\\b) or "
+            "lookarounds to isolate "
+            "the number.\n"
+            "Do NOT return markdown formatting. Just the JSON string."
             f"\n\nContext:\n{context_str}"
         )
 
@@ -149,7 +161,8 @@ class LLMService:
             "1. If a column name contains spaces, it MUST be wrapped in "
             "backticks"
             "(e.g. `Unit Price`).\n"
-            f"2. The following columns HAVE spaces and MUST be backticked: {cols_with_spaces}\n"
+            "2. The following columns HAVE spaces and "
+            f"MUST be backticked: {cols_with_spaces}\n"
             "3. The format must be: NewColumnName = Expression\n"
             "Example: 'Calculate Profit as Revenue minus Cost'\n"
             "Output: 'Profit = Revenue - Cost'\n"
@@ -172,7 +185,6 @@ class LLMService:
 
             if content.startswith("```"):
                 content = content.replace("```python", "").replace("```", "")
-
             return content.strip()
 
         except Exception as e:

@@ -30,7 +30,7 @@ const SpreadsheetPage: React.FC = () => {
 
   // 2. Chatbot & UI
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-    { role: 'ai', text: 'Hello! I am Rhombus AI.\n\n• Use "Pattern Replace" to clean text.\n• Use "Row Filter" to analyze data.' }
+    { role: 'ai', text: 'Hello! I am Rhombus AI.\n\n• Use "Pattern Replace" to clean text.\n• Use "Row Filter" to analyze data.\n• Use "Math Columns" to create columns.' }
   ]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [prompt, setPrompt] = useState('');

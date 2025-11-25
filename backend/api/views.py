@@ -154,20 +154,6 @@ class ApplyRegexView(APIView):
                     value=replacement_val,
                     regex=True
                     )
-
-            # Apply Transformation
-            df = df.astype(str)
-            try:
-                df = df.replace(
-                    to_replace=regex_pattern,
-                    value=replacement_val,
-                    regex=True
-                    )
-            except Exception as e:
-                return Response({"error": f"Regex Error: {str(e)}"},
-                                status=status.HTTP_400_BAD_REQUEST
-                                )
-
             # AVE AS NEW VERSION (Crucial for Undo)
             buffer = BytesIO()
             new_filename = f"v_edited_{old_document.file.name.split('/')[-1]}"
@@ -187,7 +173,7 @@ class ApplyRegexView(APIView):
             df = df.replace({'nan': None, 'NaN': None})
             df = df.where(pd.notnull(df), None)
 
-            updated_data = df.head(50).to_dict(orient='records')
+            updated_data = df.head(200).to_dict(orient='records')
 
             return Response({
                 "message": "Replacement applied",
@@ -352,11 +338,26 @@ class ApplyMathView(APIView):
 
             # --- APPLY MATH TRANSFORMATION ---
             try:
-                # df.eval() is efficient and handles the column assignment
-                # automatically
-                # e.g., expression is "`Total` = `Price` * `Qty`"
-                # inplace=False returns the modified dataframe
-                df = df.eval(expression, inplace=False)
+                # ROBUST FIX: Handle assignment manually to avoid
+                # BACKTICK_QUOTED_STRING error
+                # The LLM returns format: "`New Col` = `Old Col` * 2"
+
+                if "=" in expression:
+                    # Split into Target Column and Formula
+                    target, formula = expression.split("=", 1)
+                    target = target.strip()
+
+                    # Remove backticks from the target column name if present
+                    if target.startswith("`") and target.endswith("`"):
+                        target = target[1:-1]
+
+                    # Calculate the values using the formula only
+                    # We use engine='python' for better string handling in the
+                    # formula
+                    df[target] = df.eval(formula, engine='python').round(2)
+                else:
+                    # Fallback if no '=' found (unlikely given prompts)
+                    df = df.eval(expression, inplace=False, engine='python')
             except Exception as e:
                 return Response(
                     {"error": f"Math Operation Failed: {str(e)}"},
@@ -366,7 +367,6 @@ class ApplyMathView(APIView):
             # --- SAVE AS NEW VERSION ---
             buffer = BytesIO()
             new_name = f"v_math_{old_doc.file.name.split('/')[-1]}"
-
             if filename.endswith('.csv'):
                 df.to_csv(buffer, index=False)
             else:

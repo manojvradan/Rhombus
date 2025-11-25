@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-slate-800 mb-2">Rhombus AI</h1>
-        <p className="text-slate-600">Upload your dataset to begin pattern matching</p>
+        <p className="text-slate-600">Upload your dataset to begin pattern matching (Limit 4.5MB)</p>
       </div>
 
       <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow-lg border border-slate-200">
