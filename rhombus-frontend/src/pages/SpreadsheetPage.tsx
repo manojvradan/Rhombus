@@ -280,10 +280,10 @@ const SpreadsheetPage: React.FC = () => {
           {/* Undo/Redo */}
           <div className="flex gap-2">
             <button onClick={handleUndo} disabled={currentIndex === 0} className="flex items-center gap-1 px-3 py-1 bg-green-800 rounded text-xs font-bold hover:bg-green-600 disabled:opacity-50">
-                <span>↩ Undo</span>
+                <span>↩</span>
             </button>
             <button onClick={handleRedo} disabled={currentIndex === history.length - 1} className="flex items-center gap-1 px-3 py-1 bg-green-800 rounded text-xs font-bold hover:bg-green-600 disabled:opacity-50">
-                <span>Redo ↪</span>
+                <span>↪</span>
             </button>
           </div>
           <span className="text-xs opacity-80 ml-2">v{currentIndex + 1}</span>

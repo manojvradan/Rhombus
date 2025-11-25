@@ -4,7 +4,7 @@
     {
       "src": "backend/vercel_app.py",
       "use": "@vercel/python",
-      "config": { "maxDuration": 60 }
+      "config": { "maxDuration": 60, "memory": 1024 }
     },
     {
       "src": "rhombus-frontend/package.json",
