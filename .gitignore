@@ -30,7 +30,7 @@ backend/.env
 backend/.env.local
 
 # Django Static/Media
-backend/staticfiles/
+backend/staticfiles/s
 backend/media/
 backend/uploads/
 
