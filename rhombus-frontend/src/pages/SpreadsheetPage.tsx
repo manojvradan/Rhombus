@@ -85,6 +85,7 @@ const SpreadsheetPage: React.FC = () => {
     setIsAiLoading(true);
     setGeneratedRegex(null);
     setGeneratedColumn(null);
+    setReplacement('');
 
     // Send context (first 3 rows) so AI knows formats
     const dataContext = tableData.slice(0, 3);
@@ -95,14 +96,15 @@ const SpreadsheetPage: React.FC = () => {
         data_context: dataContext
       });
 
-      const { regex, column } = response.data;
+      const { regex, column, replacement } = response.data;
       setGeneratedRegex(regex);
-      setGeneratedColumn(column); // Store detected column
+      setGeneratedColumn(column);
+      setReplacement(replacement); // Store detected column
 
       const targetMsg = column ? `Target: [${column}]` : "Target: All Columns";
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        text: `I found a pattern!\nRegex: "${regex}"\n${targetMsg}` 
+       text: `I found a pattern!\nRegex: "${regex}"\nReplacement: "${replacement}"\n${targetMsg}`  
       }]);
       setPrompt(''); // Clear input on success
     } catch (error) {
@@ -353,8 +355,13 @@ const SpreadsheetPage: React.FC = () => {
                             <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 {/* Regex Preview */}
                                 <div className="text-xs font-mono bg-yellow-50 p-2 border border-yellow-200 rounded text-yellow-800 break-all">
-                                    Regex: {generatedRegex}
+                                    <span className="font-bold">Match:</span> {generatedRegex}
                                 </div>
+                                {/* Replacement Preview */}
+                                <div className="text-xs font-mono bg-yellow-50 p-2 border border-yellow-200 rounded text-yellow-800 break-all">
+                                    <span className="font-bold">Replace with:</span> "{replacement}"
+                                </div>
+
                                 {/* Column Detection Preview */}
                                 <div className="flex items-center gap-2 text-xs bg-blue-50 p-2 border border-blue-100 rounded text-blue-800">
                                     <span className="font-bold">Target:</span>
@@ -374,31 +381,22 @@ const SpreadsheetPage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="animate-in fade-in">
-                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Describe Pattern</label>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Describe Change</label>
                                 <textarea 
                                     className="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-                                    rows={2}
-                                    placeholder="e.g. Find dates in Ship Date column before 2015..."
+                                    rows={3}
+                                    placeholder="e.g. Replace all emails with 'REDACTED'..."
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerateRegex()}
                                 />
-                                <div className="mt-2 flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Replacement (e.g. REDACTED)" 
-                                        className="flex-1 text-sm border border-slate-300 rounded px-2 py-1"
-                                        value={replacement}
-                                        onChange={(e) => setReplacement(e.target.value)}
-                                    />
-                                    <button 
-                                        onClick={handleGenerateRegex}
-                                        disabled={isAiLoading || !prompt.trim()}
-                                        className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded hover:bg-blue-700 font-medium disabled:opacity-50"
-                                    >
-                                        {isAiLoading ? '...' : 'Run AI'}
-                                    </button>
-                                </div>
+                                <button 
+                                    onClick={handleGenerateRegex}
+                                    disabled={isAiLoading || !prompt.trim()}
+                                    className="w-full mt-2 bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700 font-medium disabled:opacity-50"
+                                >
+                                    {isAiLoading ? '...' : 'Generate Plan'}
+                                </button>
                             </div>
                         )}
                     </>

@@ -85,6 +85,7 @@ class GenerateRegexView(APIView):
             return Response({
                 "prompt": prompt,
                 "regex": regex_pattern.get('regex'),
+                "replacement": regex_pattern.get('replacement'),
                 "column": regex_pattern.get('column'),
                 "message": "Pattern generated successfully"
             }, status=status.HTTP_200_OK)
