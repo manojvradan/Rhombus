@@ -6,7 +6,7 @@ const baseURL = import.meta.env.PROD
   : 'http://localhost:8000'; // Local: points to Django directly
 
 const apiClient = axios.create({
-  baseURL: baseURL, // TEMP! Change after deployment
+  baseURL: baseURL,
 });
 
 // TODO: Add interceptors for debugging or token handling later
