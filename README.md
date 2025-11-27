@@ -8,7 +8,6 @@ A full-stack web application that leverages Large Language Models (LLMs) to allo
 Describe what you want to find and replace in plain English. The AI generates the complex Regex pattern and the replacement value automatically.
 
 * **Example:** "Redact all email addresses."
-* **Example:** "Replace dates in the format YYYY-MM-DD with DD/MM/YYYY."
 * **Tech:** Uses GPT-4 to generate Python Regex and Pandas to apply it efficiently.
 
 ### 2. Natural Language Row Filtering
@@ -87,3 +86,5 @@ npm install
 npm start
 ```
 The application should now be running at http://localhost:3000.
+
+Demo Video : https://www.loom.com/share/535b00bbcdef4415831580ed961235ad
